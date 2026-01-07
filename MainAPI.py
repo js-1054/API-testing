@@ -4,14 +4,15 @@ import json
 import re
 from typing import Dict, List, Any, Optional
 
-import pandas as pd
-import streamlit as st
 try:
 	from openpyxl import Workbook
 	_HAS_OPENPYXL = True
 except Exception:
 	Workbook = None
 	_HAS_OPENPYXL = False
+
+import pandas as pd
+import streamlit as st
 
 try:
 	import jsonschema
@@ -302,6 +303,38 @@ def main():
 	if not _HAS_OPENPYXL:
 		st.error("Required package 'openpyxl' is not installed in the environment. Add 'openpyxl' to requirements.txt and redeploy.")
 		return
+
+	# Debug: show installed packages if requested (useful on deploy)
+	with st.expander('Debug: show installed packages'):
+		if st.button('List installed packages'):
+			# Try to import the stdlib importlib.metadata (Py3.8+), fall back to backport
+			importlib_metadata = None
+			try:
+				import importlib.metadata as importlib_metadata
+			except Exception:
+				importlib_metadata = None
+			pkgs = []
+			if importlib_metadata is None:
+				st.warning('Could not import importlib.metadata or importlib_metadata; cannot list installed packages.')
+			else:
+				try:
+					for d in importlib_metadata.distributions():
+						# Some metadata objects may not have 'Name' key; use getattr fallback
+						name = d.metadata.get('Name') if hasattr(d, 'metadata') else None
+						if not name:
+							name = getattr(d, 'name', None) or getattr(d, 'key', None) or str(d)
+						ver = getattr(d, 'version', None) or ''
+						pkgs.append(f"{name}=={ver}")
+				except Exception:
+					# best-effort fallback
+					try:
+						pkgs = sorted([p.metadata.get('Name') or getattr(p, 'name', str(p)) for p in importlib_metadata.distributions()])
+					except Exception:
+						pkgs = ['(failed to enumerate distributions)']
+			st.text('\n'.join(pkgs))
+			st.write('openpyxl available:', _HAS_OPENPYXL)
+			st.write('google-genai available:', _HAS_GENAI)
+			st.write('jsonschema available:', _HAS_JSONSCHEMA)
 
 	st.markdown("Upload an OpenAPI JSON file, choose a module (tag) and operation, then generate test cases and download as Excel.")
 

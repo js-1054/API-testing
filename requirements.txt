@@ -1,0 +1,17 @@
+# Core runtime requirements for the helper scripts in this repository
+
+streamlit
+pandas==2.2.0
+openpyxl==3.1.0
+python-docx
+PyPDF2
+pillow
+pytesseract
+google-genai
+jsonschema
+importlib_metadata
+
+# Notes:
+# - `pytesseract` requires the Tesseract OCR binary (install separately on Windows).
+# - `google-genai` is used for model-based generation; ensure GEMINI_API_KEY is set.
+# - These entries are package names for pip; pin versions if you need reproducible installs.

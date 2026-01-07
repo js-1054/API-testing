@@ -6,7 +6,12 @@ from typing import Dict, List, Any, Optional
 
 import pandas as pd
 import streamlit as st
-from openpyxl import Workbook
+try:
+	from openpyxl import Workbook
+	_HAS_OPENPYXL = True
+except Exception:
+	Workbook = None
+	_HAS_OPENPYXL = False
 
 try:
 	import jsonschema
@@ -292,6 +297,11 @@ def df_to_excel_bytes(df: pd.DataFrame, sheet_name: str = "Sheet1") -> bytes:
 def main():
 	st.set_page_config(page_title=APP_TITLE, layout="wide")
 	st.title(APP_TITLE)
+
+	# Check runtime dependencies gracefully
+	if not _HAS_OPENPYXL:
+		st.error("Required package 'openpyxl' is not installed in the environment. Add 'openpyxl' to requirements.txt and redeploy.")
+		return
 
 	st.markdown("Upload an OpenAPI JSON file, choose a module (tag) and operation, then generate test cases and download as Excel.")
 
